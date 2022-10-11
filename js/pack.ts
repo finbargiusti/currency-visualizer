@@ -34,6 +34,6 @@ export default (update: (c: number, n: number) => void) =>
 
         const u = mod.addFunction(update, 'vii');
 
-        mod._pack(buf, data.length, p.toString(), u.toString());
+        mod._pack(buf, data.length, 0.001, p.toString(), u.toString());
       });
   });

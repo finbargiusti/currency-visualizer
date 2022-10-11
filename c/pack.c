@@ -51,7 +51,7 @@ int intersectsAny(double *c1, double *t, int n)
   return -1;
 }
 
-int pack(double *circles, int n, void (*finish)(void), void (*update_counter)(int c, int n))
+int pack(double *circles, int n, double g, void (*finish)(void), void (*update_counter)(int c, int n))
 {
   // intialise circle 1 in center
 
@@ -62,7 +62,7 @@ int pack(double *circles, int n, void (*finish)(void), void (*update_counter)(in
 
   const int GRANULARITY = 980; // degrees per rotation
 
-  const double STEP_OUT = 0.001; // change in search circle size
+  const double STEP_OUT = g; // change in search circle size
 
   const double START_DELTA = *(circles + 2);
 

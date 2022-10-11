@@ -1,22 +1,16 @@
 import getPack, { Circle } from './pack';
+import Settings from './Settings';
+
+import debounce from 'lodash.debounce';
+
+import currencyNames from '../data/currencies.json';
 
 export default class Screen {
   private bgColor = 'transparent';
 
   private canvas = () => document.getElementById('entry') as HTMLCanvasElement;
 
-  private scale = 2;
-
-  private currencies: { [name: string]: string } = {
-    USD: '#8B9684',
-    GBP: '#030162',
-    RUB: '#CE291E',
-    EUR: '#013193',
-    AUD: '#F2C60B',
-    AFN: '#DFDFDF',
-    BTC: '#EA8B1A',
-    ETH: '#52587D',
-  };
+  private scale = 100;
 
   private xOffset = 0;
   private yOffset = 0;
@@ -24,16 +18,45 @@ export default class Screen {
   private balls: Ball[] = [];
   private drawnBalls: Drawnball[] = [];
 
+  private images: { [ISO: string]: HTMLImageElement } = {};
+
   private pack?: (data: Circle[]) => Circle[] = undefined;
 
-  private updateLoadedText: (a: number, c: number) => void;
+  private updateLoaded = (c: number, n: number) => {
+    const loading = document.getElementById(
+      'loading-text'
+    ) as HTMLHeadingElement;
+    const loadWrapper = document.getElementById('loading') as HTMLDivElement;
+    const loadBar = document.querySelector('.loaded') as HTMLDivElement;
+    if (loadWrapper.style.display == 'none') {
+      loadWrapper.style.display = 'flex';
+    }
+    loading.innerText = `Packing circle ${c} of ${n}...`;
+    loadBar.style.width = `${(c * 100) / n}%`;
+    if (c === n) loadWrapper.style.display = 'none'; // finished
+  };
 
-  constructor(updateLoadedText: (a: number, c: number) => void) {
-    this.updateLoadedText = updateLoadedText;
+  private set: Settings;
+
+  constructor(set: Settings) {
+    this.set = set;
+    set.setChangeCallback(() => {
+      this.calculateBalls().then(() => this.render());
+    });
+    Object.keys(currencyNames).forEach((ISO) => {
+      const img = new Image();
+      img.height = 100;
+      img.width = 100;
+      img.onload = () => {
+        this.images[ISO] = img;
+      };
+      console.log('fetching ' + ISO);
+      img.src = `/img/currencies/${ISO}.svg`;
+    });
   }
 
   setOffset(x: number, y: number) {
-    const maxOffset = 100 * this.scale;
+    const maxOffset = 10 * this.scale;
 
     this.xOffset = Math.min(
       Math.max(this.xOffset + x, -1 * maxOffset),
@@ -69,12 +92,6 @@ export default class Screen {
           });
         });
 
-        // this.balls = this.balls.filter((b) =>
-        //   Object.keys(this.currencies).includes(b.name)
-        // );
-
-        // this.balls.sort((b1, b2) => b1.value - b2.value);
-
         return this.calculateBalls();
       })
       .catch((e) => {
@@ -109,10 +126,18 @@ export default class Screen {
 
   async calculateBalls() {
     if (!this.pack) {
-      this.pack = await getPack(this.updateLoadedText);
+      this.pack = await getPack(this.updateLoaded);
     }
 
-    let circles: Circle[] = this.balls.map((ball) => {
+    const enabledBalls = this.set.getEnabledCurrencies();
+
+    let ballsToUse: Ball[];
+
+    ballsToUse = this.balls
+      .filter((val) => enabledBalls[val.name])
+      .sort((a, b) => b.value - a.value);
+
+    let circles: Circle[] = ballsToUse.map((ball) => {
       return {
         x: 0.0,
         y: 0.0,
@@ -131,10 +156,7 @@ export default class Screen {
         x: circ.x,
         y: circ.y,
         radius: circ.r,
-        color:
-          this.currencies[this.balls[i].name] ??
-          `rgb(${randInt(0, 255)},${randInt(0, 255)},${randInt(0, 255)}`,
-        label: this.balls[i].name,
+        label: ballsToUse[i].name,
       };
     });
   }
@@ -147,28 +169,46 @@ export default class Screen {
     const interpScale = this.scale + 2 / this.scale;
 
     const ctx = canv.getContext('2d')!;
+    ctx.imageSmoothingEnabled = false;
 
-    this.drawnBalls.forEach((d, i) => {
-      // console.log(`Drawing ${i}, x: ${d.x}, y: ${d.y} ,r: ${d.radius}`);
-
+    this.drawnBalls.forEach((d) => {
       const realX = centerX + d.x * interpScale + this.xOffset;
       const realY = centerY + d.y * interpScale + this.yOffset;
       const realR = d.radius * interpScale;
+      // avoid drawing really small circles
+      if (realR < 3) {
+        return;
+      }
+      // replace small circles with placeholder, so it is not jarring.
+      if (realR < 5) {
+        ctx.save();
+        ctx.arc(realX, realY, realR, 0, 2 * Math.PI, false);
+        ctx.fillStyle = `white`;
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.save();
       ctx.beginPath();
-      ctx.arc(realX, realY, realR, 0, 2 * Math.PI, false);
-      ctx.fillStyle = d.color;
-      ctx.fill();
-      ctx.closePath;
+      ctx.drawImage(
+        this.images[d.label],
+        realX - realR,
+        realY - realR,
+        2 * realR,
+        2 * realR
+      );
+      ctx.restore();
 
-      const fontSize = Math.min(64, realR / 2);
+      // const fontSize = Math.min(64, realR / 2);
 
-      ctx.font = `${fontSize}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.fillText(d.label, realX, realY + fontSize / 2);
-      ctx.strokeStyle = 'black';
-      ctx.strokeText(d.label, realX, realY + fontSize / 2);
+      // ctx.save();
+      // ctx.font = `${fontSize}px sans-serif`;
+      // ctx.textAlign = 'center';
+      // ctx.fillStyle = 'white';
+      // ctx.lineWidth = 2;
+      // ctx.fillText(d.label, realX, realY + fontSize / 2);
+      // ctx.strokeStyle = 'black';
+      // ctx.strokeText(d.label, realX, realY + fontSize / 2);
+      // ctx.restore();
     });
   }
 
@@ -176,15 +216,23 @@ export default class Screen {
     const canv = this.canvas();
     const ctx = canv.getContext('2d')!;
 
-    ctx.fillStyle = this.bgColor;
-    ctx.fillRect(0, 0, canv.width, canv.height);
+    // ctx.fillStyle = this.bgColor;
+    // ctx.fillRect(0, 0, canv.width, canv.height);
+    ctx.clearRect(0, 0, canv.width, canv.height);
   }
 
   render() {
     requestAnimationFrame(() => {
       const canv = this.canvas();
+
+      // const res = this.set.getResolution();
+
       canv.height = window.innerHeight;
       canv.width = window.innerWidth;
+
+      // if (res < 1) {
+      //   canv.style.marginLeft = window.innerWidth /
+      // }
       this.drawbg();
       this.drawBalls();
     });
@@ -200,7 +248,6 @@ export type Drawnball = {
   x: number;
   y: number;
   radius: number;
-  color: string;
   label: string;
 };
 

@@ -1,73 +1,66 @@
 import Screen from './Screen';
+import Settings from './Settings';
 
-const loadWrapper = document.getElementById('loading') as HTMLDivElement;
-const loading = document.getElementById('loading-text') as HTMLHeadingElement;
-
-const loadBar = document.querySelector('.loaded') as HTMLDivElement;
+const openSettings = document.querySelector(
+  '#open-settings'
+) as HTMLButtonElement;
 
 const canvas = document.getElementById('entry') as HTMLCanvasElement;
 
-const updateLoaded = (c: number, n: number) => {
-  loading.innerText = `Packing circle ${c} of ${n}...`;
-  loadBar.style.width = `${(c * 100) / n}%`;
-  if (c === n) loadWrapper.style.display = 'none'; // finished
-};
+let mouseDown = false;
 
-async function startInitialRender() {
-  let mouseDown = false;
+const set = new Settings();
+const sc = new Screen(set);
 
-  const sc = new Screen(updateLoaded);
+openSettings.addEventListener('click', () => {
+  set.open();
+});
 
-  window.addEventListener('resize', () => {
+window.addEventListener('resize', () => {
+  sc.render();
+});
+
+canvas.addEventListener('mousedown', () => {
+  mouseDown = true;
+  canvas.style.cursor = 'grabbing';
+});
+
+canvas.addEventListener('touchstart', () => {
+  mouseDown = true;
+  canvas.style.cursor = 'grabbing';
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  mouseDown = false;
+  canvas.style.cursor = 'grab';
+});
+
+canvas.addEventListener('touchend', (e) => {
+  mouseDown = false;
+  canvas.style.cursor = 'grab';
+});
+
+canvas.addEventListener('mouseleave', (e) => {
+  mouseDown = false;
+  canvas.style.cursor = 'grab';
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (mouseDown) {
+    sc.setOffset(e.movementX, e.movementY);
     sc.render();
-  });
+  }
+});
 
-  canvas.addEventListener('mousedown', () => {
-    mouseDown = true;
-    canvas.style.cursor = 'grabbing';
-  });
+canvas.addEventListener('dblclick', (e) => {
+  sc.getClickedCurrency(e.pageX, e.pageY);
+});
 
-  canvas.addEventListener('touchstart', () => {
-    mouseDown = true;
-    canvas.style.cursor = 'grabbing';
-  });
+canvas.addEventListener('wheel', (e) => {
+  sc.setScale(e.deltaY, e.clientX, e.clientY);
+  sc.render();
+});
 
-  canvas.addEventListener('mouseup', (e) => {
-    mouseDown = false;
-    canvas.style.cursor = 'grab';
-  });
-
-  canvas.addEventListener('touchend', (e) => {
-    mouseDown = false;
-    canvas.style.cursor = 'grab';
-  });
-
-  canvas.addEventListener('mouseleave', (e) => {
-    mouseDown = false;
-    canvas.style.cursor = 'grab';
-  });
-
-  canvas.addEventListener('mousemove', (e) => {
-    if (mouseDown) {
-      sc.setOffset(e.movementX, e.movementY);
-      sc.render();
-    }
-  });
-
-  canvas.addEventListener('dblclick', (e) => {
-    sc.getClickedCurrency(e.pageX, e.pageY);
-  });
-
-  canvas.addEventListener('wheel', (e) => {
-    sc.setScale(e.deltaY, e.clientX, e.clientY);
-    sc.render();
-  });
-
-  sc.getBalls().then(() => {
-    sc.render();
-  });
-}
-
-(() => {
-  startInitialRender();
-})();
+sc.getBalls().then(() => {
+  sc.render();
+});

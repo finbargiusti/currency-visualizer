@@ -10,10 +10,10 @@ body
   height: 100%
   width: 100%
   // https://projects.verou.me/css3patterns/#starry-night
-  background-color: black
-  background-image: radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px), radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px), radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px), radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px)
-  background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px
-  background-position: 0 0, 40px 60px, 130px 270px, 70px 100px
+  background-color: #000000
+  opacity: 1
+  background: radial-gradient(circle, transparent 20%, #000000 20%, #000000 80%, transparent 80%, transparent), radial-gradient(circle, transparent 20%, #000000 20%, #000000 80%, transparent 80%, transparent) 20px 20px, linear-gradient(#525252 1.6px, transparent 1.6px) 0 -0.8px, linear-gradient(90deg, #525252 1.6px, #000000 1.6px) -0.8px 0
+  background-size: 40px 40px, 40px 40px, 20px 20px, 20px 20px
 
   > #entry
     position: absolute
@@ -23,31 +23,51 @@ body
     bottom: 0
     cursor: grab
 
-  > #controls
+  > .open-settings
     position: absolute
+    top: 40px
+    right: 40px
+
+  > #settings
+    position: absolute
+    display: none
+    opacity: 0
+    transition: opacity 0.5s
     top: 0
+    left: 0
     right: 0
-    height: 100%
-    display: flex
+    bottom: 0
+    backdrop-filter: blur(10px) brightness(20%)
     flex-direction: column
-    align-items: flex-end
     justify-content: flex-start
-    padding-top: 20px
-    padding-right: 20px
+    align-items: center
 
-    > .control
-      background-color: white
-      padding: 20px 40px 20px 40px
+    > h2
+      color: whit
+      font-family: sans-seri
 
-      > p
-        font-family: sans-serif
-        margin: 0
-        text-align: right
+    > .currency-toggle-options
+      display: flex
+      flex-direction: column
+      align-items: stretch
+      color: white
+      gap: 10px
+      min-width: 600px
+      max-height: 400px
+      overflow: scroll
 
-      > input[type="range"]
-        height: 100px
-        width: 20px
-        -webkit-appearance: slider-vertical
+      >.currency-toggle-wrap
+        display: flex
+
+        > span
+          flex-grow: 1
+          font-family: sans-serif
+          font-size: 24px
+
+        > input
+          flex-grow: 0
+          height: 40px
+          width: 40px
 
   #loading
     position: absolute
@@ -63,13 +83,17 @@ body
 
     > .loading-bar
       height: 50px
+      border-radius: 25px
+      overflow: hidden
       width: 400px
       background-color: darkgrey
 
       > .loaded
         height: 100%
         width: 0%
+        transition: width 0.1s
         background-color: lightblue
+        box-shadow: 0px 0px 10px 5px lighblue
 
     > #loading-text
       color: white
