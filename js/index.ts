@@ -1,5 +1,6 @@
 import Screen from './Screen';
 import Settings from './Settings';
+import Sidebar from './Sidebar';
 
 const openSettings = document.querySelector(
   '#open-settings'
@@ -11,9 +12,11 @@ let mouseDown = false;
 
 const set = new Settings();
 const sc = new Screen(set);
+const sid = new Sidebar(set, sc);
 
 openSettings.addEventListener('click', () => {
   set.open();
+  sid.close();
 });
 
 window.addEventListener('resize', () => {
@@ -47,13 +50,16 @@ canvas.addEventListener('mouseleave', (e) => {
 
 canvas.addEventListener('mousemove', (e) => {
   if (mouseDown) {
+    sid.close();
     sc.setOffset(e.movementX, e.movementY);
     sc.render();
   }
 });
 
 canvas.addEventListener('dblclick', (e) => {
-  sc.getClickedCurrency(e.pageX, e.pageY);
+  const ISO = sc.getClickedCurrency(e.pageX, e.pageY);
+  sid.open(ISO);
+  sc.goTo(ISO, true);
 });
 
 canvas.addEventListener('wheel', (e) => {

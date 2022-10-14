@@ -6,12 +6,18 @@ export type Circle = {
   r: number;
 };
 
+let running = false;
+
 export default (update: (c: number, n: number) => void) =>
   Module({
     print: console.log,
   }).then((mod) => {
     return (data: Circle[]): Promise<Circle[]> =>
       new Promise((resolve, reject) => {
+        if (running) {
+          reject();
+        }
+        running = true;
         const datasize = Float64Array.BYTES_PER_ELEMENT;
 
         const doubles = data.flatMap((circ) => [circ.x, circ.y, circ.r]); // transform data into doubles list
@@ -21,15 +27,16 @@ export default (update: (c: number, n: number) => void) =>
         mod.HEAPF64.set(new Float64Array(doubles), buf / datasize);
 
         const p = mod.addFunction(() => {
-          resolve(
-            data.map((circ, i) => {
-              return {
-                x: mod.getValue(buf + 3 * i * datasize, 'double'),
-                y: mod.getValue(buf + (3 * i + 1) * datasize, 'double'),
-                r: circ.r,
-              };
-            })
-          );
+          const res = data.map((circ, i) => {
+            return {
+              x: mod.getValue(buf + 3 * i * datasize, 'double'),
+              y: mod.getValue(buf + (3 * i + 1) * datasize, 'double'),
+              r: circ.r,
+            };
+          });
+
+          running = false;
+          resolve(res);
         }, 'v');
 
         const u = mod.addFunction(update, 'vii');

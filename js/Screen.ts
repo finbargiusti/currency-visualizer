@@ -10,7 +10,9 @@ export default class Screen {
 
   private canvas = () => document.getElementById('entry') as HTMLCanvasElement;
 
-  private scale = 100;
+  private scaleBasis = 150;
+
+  private scale = this.scaleBasis;
 
   private xOffset = 0;
   private yOffset = 0;
@@ -53,6 +55,9 @@ export default class Screen {
       console.log('fetching ' + ISO);
       img.src = `/img/currencies/${ISO}.svg`;
     });
+    this.canvas()
+      .getContext('2d')
+      ?.scale(window.devicePixelRatio, window.devicePixelRatio); // this hacky shit improves performance massively.. bruh
   }
 
   setOffset(x: number, y: number) {
@@ -99,6 +104,76 @@ export default class Screen {
       });
   }
 
+  goTo(ISO: string, withSidebarOffset?: boolean) {
+    const ball = this.drawnBalls.find((ball) => {
+      return ball.label == ISO;
+    })!;
+    const currX = (this.xOffset / this.scale) * -1;
+    const currY = (this.yOffset / this.scale) * -1;
+    const currS = this.scale;
+    const endS = this.scaleBasis / ball.radius;
+
+    const x_sidebar_offset = (this.canvas().width / endS) * 0.2;
+
+    if (
+      Math.abs(
+        ball.x - (withSidebarOffset ? currX - x_sidebar_offset : currX)
+      ) < 0.01 &&
+      Math.abs(ball.y - currY) < 0.01
+    ) {
+      return;
+    }
+    // const dist =
+    //   Math.sqrt(Math.pow(ball.x - currX, 2) + Math.pow(ball.y - currY, 2)) * 80;
+
+    // const num_frames = Math.max(Math.round(dist - dist / 4), 20);
+
+    const num_frames = 100;
+
+    // we need to create an offset so that we center it beside the sidebar.
+
+    for (let i = 0; i <= num_frames; i++) {
+      setTimeout(() => {
+        const { x, y } = this.easePos(i / num_frames, {
+          sx: currX,
+          sy: currY,
+          ex: withSidebarOffset ? ball.x - x_sidebar_offset : ball.x,
+          ey: ball.y,
+        });
+
+        const s = currS + (endS - currS) * this.ease(i / num_frames);
+
+        this.scale = s;
+        this.xOffset = x * this.scale * -1;
+        this.yOffset = y * this.scale * -1;
+        this.render();
+      }, 10 * i);
+    }
+  }
+
+  private ease(x: number): number {
+    // return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    return 1 - Math.pow(1 - x, 4);
+  }
+
+  private easePos(
+    frame: number,
+    options: {
+      sx: number;
+      sy: number;
+      ex: number;
+      ey: number;
+    }
+  ) {
+    const { sx, sy, ex, ey } = options;
+    const easedProgress = this.ease(frame);
+
+    return {
+      x: sx + (ex - sx) * easedProgress,
+      y: sy + (ey - sy) * easedProgress,
+    };
+  }
+
   getClickedCurrency(x: number, y: number) {
     const canv = this.canvas();
     const centerY = canv.height / 2;
@@ -111,9 +186,9 @@ export default class Screen {
     let closestDist = Infinity;
 
     this.drawnBalls.forEach((ball) => {
-      const dist = Math.sqrt(
-        Math.pow(ball.x - realX, 2) + Math.pow(ball.y - realY, 2)
-      );
+      const dist =
+        Math.sqrt(Math.pow(ball.x - realX, 2) + Math.pow(ball.y - realY, 2)) /
+        ball.radius;
 
       if (dist < closestDist) {
         closestDist = dist;
@@ -121,10 +196,10 @@ export default class Screen {
       }
     });
 
-    window.open(`https://moneyconvert.net/${closest.toLowerCase()}`);
+    return closest;
   }
 
-  async calculateBalls() {
+  public async calculateBalls() {
     if (!this.pack) {
       this.pack = await getPack(this.updateLoaded);
     }
@@ -161,7 +236,7 @@ export default class Screen {
     });
   }
 
-  drawBalls() {
+  private async drawBalls() {
     const canv = this.canvas();
     const centerY = canv.height / 2;
     const centerX = canv.width / 2;
@@ -210,9 +285,11 @@ export default class Screen {
       // ctx.strokeText(d.label, realX, realY + fontSize / 2);
       // ctx.restore();
     });
+
+    return;
   }
 
-  drawbg() {
+  private drawbg() {
     const canv = this.canvas();
     const ctx = canv.getContext('2d')!;
 

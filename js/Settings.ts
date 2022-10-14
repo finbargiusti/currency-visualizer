@@ -1,14 +1,20 @@
 import currencyInfo from '../data/currencies.json';
 
+type CurrencyEnabledList = {
+  [ISO: string]: {
+    name: string;
+    enabled: boolean;
+  };
+};
+
 export default class Settings {
-  private currencies: {
-    [ISO: string]: {
-      name: string;
-      enabled: boolean;
-    };
-  } = {};
+  private currencies: CurrencyEnabledList = {};
 
   private resolution: number = 0.5;
+
+  private currenciesAtOpen: string;
+
+  private granularity = 0.01;
 
   private panel() {
     return document.getElementById('settings')!;
@@ -39,29 +45,32 @@ export default class Settings {
       };
     });
 
-    document
-      .getElementById('close-settings')
-      ?.addEventListener('click', () => this.close());
+    document.getElementById('close-settings')?.addEventListener('click', () => {
+      this.close();
+    });
   }
 
   public close() {
     const pan = this.panel();
-    pan.style.opacity = '0';
-    pan.style.display = 'none';
-    this.changeCallback();
+    pan.classList.remove('open');
+    if (JSON.stringify(this.currencies) != this.currenciesAtOpen) {
+      this.changeCallback();
+    }
   }
 
   public open() {
     const pan = this.panel();
-    pan.style.display = 'flex';
-    setTimeout(() => {
-      pan.style.opacity = '1';
-    }, 10);
+    pan.classList.add('open');
+    this.currenciesAtOpen = JSON.stringify(this.currencies); // we copy the object and all objects inside recursively so that we can compare after and check for changes to rerender
     this.render();
   }
 
   public render() {
     this.renderCurrencyOptions();
+  }
+
+  public changeCurrencyStatus(ISO: string, enabled: boolean) {
+    this.currencies[ISO].enabled = enabled;
   }
 
   public renderCurrencyOptions(query: string = '') {
@@ -86,20 +95,22 @@ export default class Settings {
         (a, b) => {
           const a_enabled = this.currencies[a].enabled;
           const b_enabled = this.currencies[b].enabled;
-          return a_enabled === b_enabled ? 0 : a_enabled ? -1 : 1;
+          return b_enabled === a_enabled ? 0 : b_enabled ? -1 : 1;
         } // sort checked first
       )
       .forEach((k) => {
         const currency = this.currencies[k];
         const d = document.createElement('div');
         d.className = 'currency-toggle-wrap';
-        const tag = document.createElement('span');
+        const tag = document.createElement('label');
         tag.innerText = currency.name;
         const toggle = document.createElement('input');
+        tag.htmlFor = k + '-enabled';
         toggle.type = 'checkbox';
+        toggle.id = k + '-enabled';
         toggle.checked = currency.enabled;
         toggle.addEventListener('change', () => {
-          this.currencies[k].enabled = toggle.checked;
+          this.changeCurrencyStatus(k, toggle.checked);
         });
 
         d.appendChild(tag);
@@ -107,6 +118,8 @@ export default class Settings {
         wrap.appendChild(d);
       });
   }
+
+  public renderGranularityOption() {}
 
   public getEnabledCurrencies(): { [ISO: string]: boolean } {
     const enabled: { [ISO: string]: boolean } = {};

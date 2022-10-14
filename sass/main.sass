@@ -15,6 +15,9 @@ body
   background: radial-gradient(circle, transparent 20%, #000000 20%, #000000 80%, transparent 80%, transparent), radial-gradient(circle, transparent 20%, #000000 20%, #000000 80%, transparent 80%, transparent) 20px 20px, linear-gradient(#525252 1.6px, transparent 1.6px) 0 -0.8px, linear-gradient(90deg, #525252 1.6px, #000000 1.6px) -0.8px 0
   background-size: 40px 40px, 40px 40px, 20px 20px, 20px 20px
 
+  *
+    user-select: none
+
   > #entry
     position: absolute
     top: 0
@@ -30,7 +33,8 @@ body
 
   > #settings
     position: absolute
-    display: none
+    display: flex
+    pointer-events: none
     opacity: 0
     transition: opacity 0.5s
     top: 0
@@ -42,9 +46,13 @@ body
     justify-content: flex-start
     align-items: center
 
+    &.open
+      pointer-events: all
+      opacity: 1
+
     > h2
-      color: whit
-      font-family: sans-seri
+      color: white
+      font-family: sans-serif
 
     > .currency-toggle-options
       display: flex
@@ -58,8 +66,9 @@ body
 
       >.currency-toggle-wrap
         display: flex
+        align-items: center
 
-        > span
+        > label
           flex-grow: 1
           font-family: sans-serif
           font-size: 24px
@@ -69,13 +78,45 @@ body
           height: 40px
           width: 40px
 
-  #loading
+  > #sidebar
+    position: absolute
+    width: 40vw
+    left: 0
+    transition: transform 0.2s
+    transform: translateX(-100%)
+    top: 0
+    height: 100vh
+    backdrop-filter: brightness(20%) blur(10px)
+    color: white
+    font-family: sans-serif
+    padding: 20px
+    box-sizing: border-box
+    display: grid
+    grid-template-columns: 1fr auto
+    grid-template-rows: 1fr auto
+    grid-template-areas: "content close" "options close"
+    gap: 10px
+
+    > .content
+      grid-area: content
+      overflow-y: auto
+
+    > .close
+      grid-area: close
+      cursor: pointer
+      display: flex
+      align-items: center
+
+    &.open
+      transform: translateX(0%)
+
+  > #loading
     position: absolute
     top: 0
     left: 0
     right: 0
     bottom: 0
-    background-color: black
+    backdrop-filter: blur(10px) brightness(20%)
     display: flex
     flex-direction: column
     align-items: center
