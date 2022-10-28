@@ -53,7 +53,11 @@ export default class Screen {
         this.images[ISO] = img;
       };
       console.log('fetching ' + ISO);
-      img.src = `/img/currencies/${ISO}.svg`;
+      if (process.env.NODE_ENV === 'development') {
+        img.src = `/img/currencies/${ISO}.svg`;
+      } else {
+        img.src = `/currency-visualizer/img/currencies/${ISO}.svg`;
+      }
     });
     this.canvas()
       .getContext('2d')
