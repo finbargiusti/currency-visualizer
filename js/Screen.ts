@@ -50,7 +50,9 @@ export default class Screen {
       img.height = 100;
       img.width = 100;
       img.onload = () => {
-        this.images[ISO] = img;
+        if (img) {
+          this.images[ISO] = img;
+        }
       };
       console.log('fetching ' + ISO);
       // @ts-ignore
