@@ -65,7 +65,12 @@ export default class Sidebar {
   private async renderInfo(ISO: string) {
     let text: string;
     if (!this.cache[ISO]) {
-      text = await WikiJS()
+      text = await WikiJS({
+        apiUrl:
+          // @ts-ignore
+          (process.env.NODE_ENV === 'development' ? 'http' : 'https') +
+          '://en.wikipedia.org/w/api.php',
+      })
         .page(currencytitles[ISO])
         .then(async (page) => {
           const t = await (await page.summary()).replace('\n', '<br/><br/>');

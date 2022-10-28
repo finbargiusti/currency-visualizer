@@ -258,7 +258,6 @@ export default class Screen {
         return;
       }
 
-      console.log(this.images[d.label]);
       // replace small circles with placeholder, so it is not jarring.
       if (realR < 5 || !this.images[d.label]) {
         ctx.save();
