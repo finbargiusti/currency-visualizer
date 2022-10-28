@@ -260,7 +260,7 @@ export default class Screen {
         return;
       }
       // replace small circles with placeholder, so it is not jarring.
-      if (realR < 5) {
+      if (realR < 5 || !this.images[d.label]) {
         ctx.save();
         ctx.arc(realX, realY, realR, 0, 2 * Math.PI, false);
         ctx.fillStyle = `white`;
@@ -268,7 +268,6 @@ export default class Screen {
         ctx.restore();
       }
       ctx.save();
-      ctx.beginPath();
       ctx.drawImage(
         this.images[d.label],
         realX - realR,
