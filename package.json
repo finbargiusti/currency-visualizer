@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "parcel index.html",
-    "buildc": "emcc c/pack.c -O3 -o c/bin/cpack.js -s EXPORTED_FUNCTIONS=\"['_pack', '_malloc', '_free']\" -s EXPORTED_RUNTIME_METHODS=\"['ccall','cwrap', 'getValue', 'addFunction']\" -s MODULARIZE=1 -s EXPORT_ES6=1 -s ASYNCIFY -s ALLOW_TABLE_GROWTH=1",
+    "buildc": "emcc c/pack.c -O3 -o c/bin/cpack.js -s EXPORTED_FUNCTIONS=\"['_pack', '_malloc', '_free']\" -s EXPORTED_RUNTIME_METHODS=\"['ccall','cwrap', 'getValue', 'addFunction']\" -s MODULARIZE=1 -s EXPORT_ES6=1 -s ASYNCIFY -s ALLOW_TABLE_GROWTH=1 -g",
     "build": "parcel build index.html"
   },
   "devDependencies": {
