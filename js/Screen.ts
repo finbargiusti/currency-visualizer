@@ -1,13 +1,9 @@
 import getPack, { Circle } from './pack';
 import Settings from './Settings';
 
-import debounce from 'lodash.debounce';
-
 import currencyNames from '../data/currencies.json';
 
 export default class Screen {
-  private bgColor = 'transparent';
-
   private canvas = () => document.getElementById('entry') as HTMLCanvasElement;
 
   private scaleBasis = 150;
@@ -266,9 +262,11 @@ export default class Screen {
       // replace small circles with placeholder, so it is not jarring.
       if (realR < 5 || !this.images[d.label]) {
         ctx.save();
+        ctx.beginPath();
         ctx.arc(realX, realY, realR, 0, 2 * Math.PI, false);
         ctx.fillStyle = `white`;
         ctx.fill();
+        ctx.closePath();
         ctx.restore();
       }
       ctx.save();
