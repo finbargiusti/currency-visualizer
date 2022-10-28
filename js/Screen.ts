@@ -53,6 +53,7 @@ export default class Screen {
         this.images[ISO] = img;
       };
       console.log('fetching ' + ISO);
+      // @ts-ignore
       if (process.env.NODE_ENV === 'development') {
         img.src = `/img/currencies/${ISO}.svg`;
       } else {
